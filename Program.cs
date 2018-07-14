@@ -55,9 +55,11 @@ namespace gringod
                             var context = listener.EndGetContext(asyncResult);
                             var ip = context.Request.RemoteEndPoint.Address;
 
-                            Console.WriteLine(context.Request.Url.Host);
-                            Console.WriteLine(context.Request.RawUrl);
-                            Console.WriteLine(ip);
+                            Console.WriteLine();
+                            Console.Write(ip + " ");
+                            Console.Write(context.Request.Url.Host + " ");
+                            Console.Write(context.Request.RawUrl);
+                           
 
                             string message = "";
 
@@ -66,24 +68,24 @@ namespace gringod
                             if (clients.ContainsKey(ip.ToString()))
                                 lastSeen = clients[ip.ToString()];
 
-                            if (!saps.ContainsKey(ip.ToString()) || (saps.ContainsKey(ip.ToString()) && saps[ip.ToString()] < 20))
+                            if (!saps.ContainsKey(ip.ToString()) || (saps.ContainsKey(ip.ToString()) && saps[ip.ToString()] < 100))
                             {
                                 if (context.Request.Url.Host.Contains("gringod.info"))
                                 {
                                     if (lastSeen.AddMinutes(10) < DateTime.Now)
                                     {
-                                        clients[ip.ToString()] = DateTime.Now;
-
-                                        if (!saps.ContainsKey(ip.ToString()))
-                                            saps[ip.ToString()] = 0;
-                                        else
-                                            saps[ip.ToString()]++;
-
                                         Random r = new Random((int)DateTime.Now.Ticks);
 
                                         decimal amount = ((decimal)(r.NextDouble() * 100));
 
-                                        message = "The god is smiling on you today. Sending " + amount.ToString("0.00") + " grin\n";
+                                        clients[ip.ToString()] = DateTime.Now;
+
+                                        if (!saps.ContainsKey(ip.ToString()))
+                                            saps[ip.ToString()] = 0;
+                                        else if (saps[ip.ToString()] > 50)
+                                            amount /= saps[ip.ToString()];
+
+                                        message = "The god is smiling on you today. Sending " + amount.ToString("0.000") + " grin.\n";
 
                                         try
                                         {
@@ -105,12 +107,25 @@ namespace gringod
                                                 Task.Delay(1000).Wait();
                                             }
 
+                                            int l1 = message.Trim().Length;
                                             message += p.StandardError.ReadToEnd();
                                             message += p.StandardOutput.ReadToEnd();
+                                            int l2 = message.Trim().Length;
 
+                                            if (l2-l1 < 5)
+                                            {
+                                                saps[ip.ToString()] += 10;
+                                                Console.Write(" OK");
+                                            }
+                                            else
+                                            {
+                                                saps[ip.ToString()]++;
+                                                Console.Write(" FAIL");
+                                            }
                                         }
                                         catch (Exception ex)
                                         {
+                                            Console.Write(" EXCEPTION");
                                             message = "Sorry, god has an error :( " + ex.Message;
                                         }
                                     }
