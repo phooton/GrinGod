@@ -56,12 +56,6 @@ namespace gringod
                             var context = listener.EndGetContext(asyncResult);
                             var ip = context.Request.RemoteEndPoint.Address;
 
-                            Console.WriteLine();
-                            Console.Write(ip + " ");
-                            Console.Write(context.Request.Url.Host + " ");
-                            Console.Write(context.Request.RawUrl);
-                           
-
                             string message = "";
 
                             DateTime lastSeen = DateTime.MinValue;
@@ -69,8 +63,18 @@ namespace gringod
                             if (clients.ContainsKey(ip.ToString()))
                                 lastSeen = clients[ip.ToString()];
 
+                            if (!saps.ContainsKey(ip.ToString()))
+                                saps[ip.ToString()] = 0;
+                            else
+                                saps[ip.ToString()]++;
+
                             if (!saps.ContainsKey(ip.ToString()) || (saps.ContainsKey(ip.ToString()) && saps[ip.ToString()] < 100))
                             {
+                                Console.WriteLine();
+                                Console.Write(ip + " ");
+                                Console.Write(context.Request.Url.Host + " ");
+                                Console.Write(context.Request.RawUrl);
+
                                 if (context.Request.Url.Host.Contains("gringod.info"))
                                 {
                                     if (lastSeen.AddMinutes(10) < DateTime.Now)
@@ -81,9 +85,7 @@ namespace gringod
 
                                         clients[ip.ToString()] = DateTime.Now;
 
-                                        if (!saps.ContainsKey(ip.ToString()))
-                                            saps[ip.ToString()] = 0;
-                                        else if (saps[ip.ToString()] > 50)
+                                        if (saps[ip.ToString()] > 50)
                                             amount /= saps[ip.ToString()];
 
                                         message = "Gringotts are smiling on you today. Sending " + amount.ToString("0.000") + " grin.\n";
@@ -154,8 +156,13 @@ namespace gringod
                                         else
                                         {
                                             message =  "##########################################################\n";
+                                            message += "##  Grintings stranger, we can't send grin to you now.  ##\n";
+                                            message += "##########################################################\n";
+                                            message += "##  Your wallet is inaccessible @ 13415 from outside    ##\n";
                                             message += "##  Check your router forwards port 13415 to this PC    ##\n";
                                             message += "##  And that you have wallet listening on 0.0.0.0:13415 ##\n";
+                                            message += 
+                                         string.Format("##  Or on your public IP {0:d3}.{1:d3}.{2:d3}.{3:d3}:13415          ##\n", ip.GetAddressBytes()[0], ip.GetAddressBytes()[1], ip.GetAddressBytes()[2], ip.GetAddressBytes()[3]);
                                             message += "##########################################################\n";
                                         }
                                     }
@@ -167,7 +174,10 @@ namespace gringod
 
                             }
                             else
-                                message = "Greedy eh?";
+                            {
+                                return;
+                                //message = "Greedy eh?";
+                            }
 
                             /*
                             Use s StreamWriter to write text to the response
