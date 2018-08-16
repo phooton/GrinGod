@@ -88,7 +88,7 @@ namespace gringod
                                         if (saps[ip.ToString()] > 50)
                                             amount /= saps[ip.ToString()];
 
-                                        message = "Gringotts are smiling on you today. Sending " + amount.ToString("0.000") + " grin.\n";
+                                        message = "## Gringotts are smiling on you today. Sending " + amount.ToString("0.000") + " grin. ##\n\n";
 
                                         if (IsPortOpen(ip.ToString(), 13415))
                                         {
@@ -120,7 +120,7 @@ namespace gringod
                                                 message += p.StandardOutput.ReadToEnd();
                                                 int l2 = message.Trim().Length;
 
-                                                if (l2 - l1 < 5)
+                                                if ( (l2 - l1 < 5) || message.Contains("Tx sent"))
                                                 {
                                                     saps[ip.ToString()] += 10;
                                                     Console.Write(" OK");
